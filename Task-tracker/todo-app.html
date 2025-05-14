@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Görev Takip Uygulaması</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      padding: 0;
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #89f7fe, #66a6ff);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 40px 20px;
+    }
+
+    .container {
+      background-color: #fff;
+      border-radius: 16px;
+      padding: 30px;
+      max-width: 500px;
+      width: 100%;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+      color: #333;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    input[type="text"], select {
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      background-color: #66a6ff;
+      color: white;
+      padding: 12px 18px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    button:hover {
+      background-color: #4a90e2;
+    }
+
+    ul {
+      list-style-type: none;
+    }
+
+    li {
+      background-color: #f4f4f4;
+      padding: 12px;
+      margin-bottom: 10px;
+      border-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    li.completed {
+      text-decoration: line-through;
+      opacity: 0.6;
+    }
+
+    .actions button {
+      background: transparent;
+      border: none;
+      margin-left: 10px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    .filter {
+      margin-bottom: 15px;
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📋 Görev Takip</h1>
+    <form id="taskForm">
+      <input type="text" id="taskInput" placeholder="Yeni görev ekle..." required />
+      <select id="categorySelect">
+        <option value="Genel">Genel</option>
+        <option value="İş">İş</option>
+        <option value="Kişisel">Kişisel</option>
+        <option value="Okul">Okul</option>
+      </select>
+      <button type="submit">Ekle</button>
+    </form>
+
+    <div class="filter">
+      <label for="filterSelect">Filtrele:</label>
+      <select id="filterSelect">
+        <option value="Tümü">Tümü</option>
+        <option value="Tamamlanan">Tamamlanan</option>
+        <option value="Tamamlanmamış">Tamamlanmamış</option>
+      </select>
+    </div>
+
+    <ul id="taskList"></ul>
+  </div>
+
+  <script>
+    const taskForm = document.getElementById('taskForm');
+    const taskInput = document.getElementById('taskInput');
+    const taskList = document.getElementById('taskList');
+    const categorySelect = document.getElementById('categorySelect');
+    const filterSelect = document.getElementById('filterSelect');
+
+    let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+    renderTasks();
+
+    taskForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const text = taskInput.value.trim();
+      const category = categorySelect.value;
+      if (text !== '') {
+        tasks.push({ text, category, completed: false });
+        taskInput.value = '';
+        saveAndRender();
+      }
+    });
+
+    filterSelect.addEventListener('change', () => {
+      renderTasks();
+    });
+
+    function renderTasks() {
+      taskList.innerHTML = '';
+      const filter = filterSelect.value;
+
+      tasks.forEach((task, index) => {
+        if (
+          (filter === 'Tamamlanan' && !task.completed) ||
+          (filter === 'Tamamlanmamış' && task.completed)
+        ) {
+          return;
+        }
+
+        const li = document.createElement('li');
+        li.className = task.completed ? 'completed' : '';
+
+        const span = document.createElement('span');
+        span.textContent = `${task.text} (${task.category})`;
+        span.style.cursor = 'pointer';
+        span.addEventListener('click', () => {
+          tasks[index].completed = !tasks[index].completed;
+          saveAndRender();
+        });
+
+        const actions = document.createElement('div');
+        actions.className = 'actions';
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.textContent = '🗑️';
+        deleteBtn.title = 'Sil';
+        deleteBtn.addEventListener('click', () => {
+          tasks.splice(index, 1);
+          saveAndRender();
+        });
+
+        actions.appendChild(deleteBtn);
+        li.appendChild(span);
+        li.appendChild(actions);
+        taskList.appendChild(li);
+      });
+    }
+
+    function saveAndRender() {
+      localStorage.setItem('tasks', JSON.stringify(tasks));
+      renderTasks();
+    }
+  </script>
+</body>
+</html>
